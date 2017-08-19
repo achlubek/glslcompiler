@@ -81,23 +81,34 @@ namespace glslcompiler
 
         static void Main(string[] args)
         {
+            string dr = string.Join(" ", args);
             //glslangValidator.exe
-            string[] files = Directory.GetFiles(Directory.GetCurrentDirectory());
-            ScanDir(Directory.GetCurrentDirectory());
+            Directory.SetCurrentDirectory(dr);
+            string[] files = Directory.GetFiles(dr);
+            ScanDir(dr);
             foreach (string file in files)
             {
                 if (file.EndsWith(".frag") || file.EndsWith(".vert"))
                 {
-                    Console.WriteLine("Compiling " + file + " to " + file + ".spv");
+                    Console.WriteLine("Compiling " + Path.GetFileName(file) + " to compiled/" + Path.GetFileName(file) + ".spv");
                     string tmp = Prepare(file);
-                    var pinfo = new ProcessStartInfo("glslangValidator.exe", "-V " + tmp + " -o " + file + ".spv");
+                    var pinfo = new ProcessStartInfo("glslangValidator.exe", "-V " + tmp + " -o compiled/" + Path.GetFileName(file) + ".spv");
                     pinfo.CreateNoWindow = true;
                     pinfo.UseShellExecute = false;
                     pinfo.RedirectStandardOutput = true;
                     var p = Process.Start(pinfo);
                     string o = p.StandardOutput.ReadToEnd();
-                    Console.WriteLine(o);
-                    Console.WriteLine();
+                    o = o.Replace("\r\n", "\n");
+                    string[] lines = o.Split('\n');
+                    foreach(string line in lines)
+                    {
+                        if (line.Contains("ERROR"))
+                        {
+                            Console.WriteLine(line);
+                        }
+                    }
+                    //Console.WriteLine(o);
+                    //Console.WriteLine();
                 }
             }
         }
