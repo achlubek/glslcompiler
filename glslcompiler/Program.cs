@@ -62,7 +62,7 @@ namespace glslcompiler
             string result = string.Join("\n", contents);
             if (encloseInGuard)
             {
-                string guid = MD5(file);
+                string guid = "X" + MD5(file);
                 result = "#ifndef " + guid + "\n#define " + guid + "\n" + result + "\n#endif";
             }
             return result;
