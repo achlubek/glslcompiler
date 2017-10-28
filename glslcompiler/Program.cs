@@ -78,6 +78,16 @@ namespace glslcompiler
 
             return newfile;
         }
+        static string CalculateMD5Hash(string input)
+        {
+            var md5 = System.Security.Cryptography.MD5.Create();
+            var inputBytes = System.Text.Encoding.ASCII.GetBytes(input);
+            var hash = md5.ComputeHash(inputBytes);
+            var sb = new StringBuilder();
+            for (int i = 0; i < hash.Length; i++)
+                sb.Append(hash[i].ToString("X2"));
+            return sb.ToString();
+        }
 
         static void Main(string[] args)
         {
@@ -88,11 +98,16 @@ namespace glslcompiler
             ScanDir(dr);
             foreach (string file in files)
             {
-                if (file.EndsWith(".frag") || file.EndsWith(".vert"))
+                if (file.EndsWith(".frag") || file.EndsWith(".vert") || file.EndsWith(".comp"))
                 {
-                    Console.WriteLine("Compiling " + Path.GetFileName(file) + " to compiled/" + Path.GetFileName(file) + ".spv");
+                    string dstfile = "compiled/" + Path.GetFileName(file) + ".spv";
                     string tmp = Prepare(file);
-                    var pinfo = new ProcessStartInfo("glslangValidator.exe", "-V " + tmp + " -o compiled/" + Path.GetFileName(file) + ".spv");
+                    string tmpmd5 = Prepare(file)+".md5";
+                    string last_md5 = File.Exists(tmpmd5) ? File.ReadAllText(tmpmd5) : "";
+                    string new_md5 = CalculateMD5Hash(File.ReadAllText(tmp));
+                    if (last_md5 == new_md5) continue;
+                    Console.WriteLine("Compiling " + Path.GetFileName(file) + " to compiled/" + Path.GetFileName(file) + ".spv");
+                    var pinfo = new ProcessStartInfo("glslangValidator.exe", "-V " + tmp + " -o " + dstfile);
                     pinfo.CreateNoWindow = true;
                     pinfo.UseShellExecute = false;
                     pinfo.RedirectStandardOutput = true;
@@ -100,17 +115,21 @@ namespace glslcompiler
                     string o = p.StandardOutput.ReadToEnd();
                     o = o.Replace("\r\n", "\n");
                     string[] lines = o.Split('\n');
+                    bool errored = false;
                     foreach(string line in lines)
                     {
                         if (line.Contains("ERROR"))
                         {
                             Console.WriteLine(line);
+                            errored = true;
                         }
                     }
+                    if(!errored)File.WriteAllText(tmpmd5, new_md5);
                     //Console.WriteLine(o);
                     //Console.WriteLine();
                 }
             }
+            Console.WriteLine("Done!");
         }
     }
 }
