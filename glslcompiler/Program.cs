@@ -52,6 +52,11 @@ namespace glslcompiler
                 if(contents[i].StartsWith(header))
                 {
                     string include = contents[i].Substring(header.Length);
+                    if (!FilesMap.ContainsKey(include))
+                    {
+                        Console.WriteLine("ERROR: NOT FOUND: " + include);
+                        throw new FileNotFoundException(include);
+                    }
                     contents[i] = ResolveIncludes(FilesMap[include]);
                 }
                 else if (contents[i].Contains(guard)) {
