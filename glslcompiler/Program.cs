@@ -112,7 +112,7 @@ namespace glslcompiler
                     string new_md5 = CalculateMD5Hash(File.ReadAllText(tmp));
                     if (last_md5 == new_md5) continue;
                     Console.WriteLine("Compiling " + Path.GetFileName(file) + " to compiled/" + Path.GetFileName(file) + ".spv");
-                    var pinfo = new ProcessStartInfo("glslangValidator.exe", "-V " + tmp + " -o " + dstfile);
+                    var pinfo = new ProcessStartInfo(@"glslangValidator.exe", "-V " + tmp + " -o " + dstfile);
                     pinfo.CreateNoWindow = true;
                     pinfo.UseShellExecute = false;
                     pinfo.RedirectStandardOutput = true;
